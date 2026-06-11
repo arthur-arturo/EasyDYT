@@ -1,0 +1,152 @@
+/* Estilos de la Extensión YouTube MP3/MP4 Downloader (content.css) */
+
+/* --- BOTONES DE PÁGINA DE VIDEO ESTÁNDAR (ESTILO CÁPSULA YOUTUBE) --- */
+.yt-mp3-btn-watch,
+.yt-mp4-btn-watch {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: var(--yt-spec-badge-chip-background, rgba(255, 255, 255, 0.1)) !important;
+  color: var(--yt-spec-text-primary, #fff) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  margin-left: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  font-family: "Roboto", "Arial", sans-serif !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s, transform 0.1s, color 0.2s !important;
+  vertical-align: middle !important;
+  user-select: none !important;
+}
+
+.yt-mp3-btn-watch {
+  order: 100 !important;
+}
+
+.yt-mp4-btn-watch {
+  order: 101 !important;
+}
+
+/* Modo claro nativo de YouTube (cuando se aplica el fondo claro) */
+html[system-tracker-mode="light"] .yt-mp3-btn-watch,
+html[system-tracker-mode="light"] .yt-mp4-btn-watch,
+html:not([dark]) .yt-mp3-btn-watch,
+html:not([dark]) .yt-mp4-btn-watch {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #0f0f0f !important;
+}
+
+.yt-mp3-btn-watch:hover,
+.yt-mp4-btn-watch:hover {
+  background-color: var(--yt-spec-button-chip-background-hover, rgba(255, 255, 255, 0.2)) !important;
+}
+
+html[system-tracker-mode="light"] .yt-mp3-btn-watch:hover,
+html[system-tracker-mode="light"] .yt-mp4-btn-watch:hover,
+html:not([dark]) .yt-mp3-btn-watch:hover,
+html:not([dark]) .yt-mp4-btn-watch:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.yt-mp3-btn-watch:active,
+.yt-mp4-btn-watch:active {
+  transform: scale(0.95) !important;
+}
+
+/* Estados Visuales */
+.yt-mp3-btn-watch.loading,
+.yt-mp4-btn-watch.loading {
+  background-color: rgba(243, 156, 18, 0.15) !important;
+  color: #e67e22 !important;
+  cursor: wait !important;
+  border: 1px dashed #e67e22 !important;
+}
+
+.yt-mp3-btn-watch.success,
+.yt-mp4-btn-watch.success {
+  background-color: rgba(46, 204, 113, 0.2) !important;
+  color: #2ecc71 !important;
+}
+
+.yt-mp3-btn-watch.error,
+.yt-mp4-btn-watch.error {
+  background-color: rgba(231, 76, 60, 0.2) !important;
+  color: #e74c3c !important;
+}
+
+/* --- BOTÓN DE SHORTS (ESTILO CÍRCULO LATERAL YOUTUBE) --- */
+.yt-mp3-btn-short-container,
+.yt-mp4-btn-short-container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-top: 12px !important;
+  margin-bottom: 4px !important;
+  user-select: none !important;
+}
+
+.yt-mp3-btn-short,
+.yt-mp4-btn-short {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s, transform 0.1s, color 0.2s !important;
+}
+
+.yt-mp3-btn-short:hover,
+.yt-mp4-btn-short:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.yt-mp3-btn-short:active,
+.yt-mp4-btn-short:active {
+  transform: scale(0.9) !important;
+}
+
+.yt-mp3-btn-short-label,
+.yt-mp4-btn-short-label {
+  font-size: 12px !important;
+  color: #fff !important;
+  margin-top: 4px !important;
+  font-family: "Roboto", "Arial", sans-serif !important;
+  text-align: center !important;
+  font-weight: 400 !important;
+}
+
+/* Estados Visuales para Shorts */
+.yt-mp3-btn-short.loading,
+.yt-mp4-btn-short.loading {
+  background-color: rgba(243, 156, 18, 0.3) !important;
+  color: #f39c12 !important;
+  animation: yt-mp3-pulse 1.5s infinite !important;
+}
+
+.yt-mp3-btn-short.success,
+.yt-mp4-btn-short.success {
+  background-color: #2ecc71 !important;
+  color: #fff !important;
+}
+
+.yt-mp3-btn-short.error,
+.yt-mp4-btn-short.error {
+  background-color: #e74c3c !important;
+  color: #fff !important;
+}
+
+@keyframes yt-mp3-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
