@@ -22,6 +22,7 @@
   user-select: none !important;
   flex-shrink: 0 !important;
   white-space: nowrap !important;
+  align-self: center !important;
 }
 
 .yt-mp3-btn-watch {
@@ -79,11 +80,12 @@ html:not([dark]) .yt-mp4-btn-watch:hover {
   color: #e74c3c !important;
 }
 
-/* --- PROTECCIÓN ANTI-DESTRUCTIVA DE LAYOUT PARA NOMBRES LARGOS DE CANALES --- */
+/* --- PROTECCIÓN ANTI-DESTRUCTIVA DE LAYOUT Y ALINEACIÓN EN UNA SOLA FILA --- */
 
-/* Impedir que la fila principal de metadatos colapse o se rompa en varias lineas innecesarias */
+/* Fila principal de metadatos (Top Row): debe ser flex horizontal estricto sin wrap */
 ytd-watch-metadata #top-row {
   display: flex !important;
+  flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -91,14 +93,29 @@ ytd-watch-metadata #top-row {
   width: 100% !important;
 }
 
-/* El área del propietario del video debe encogerse limpiamente si el nombre del canal es largo */
+/* Contenedor del propietario del video (#owner / ytd-video-owner-renderer): flex horizontal estricto */
 ytd-watch-metadata #owner,
 ytd-video-owner-renderer {
   min-width: 0 !important;
   flex-shrink: 1 !important;
   display: flex !important;
+  flex-direction: row !important;
   align-items: center !important;
+  flex-wrap: nowrap !important;
   overflow: hidden !important;
+}
+
+/* Forzar a los contenedores de suscripción y botones a no hacer salto de línea jamás */
+ytd-video-owner-renderer #subscribe-button,
+ytd-video-owner-renderer #sponsor-button,
+ytd-video-owner-renderer #buttons,
+ytd-subscribe-button-renderer {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 /* Contenedor con la información del canal (nombre y suscriptores) */
@@ -108,7 +125,7 @@ ytd-video-owner-renderer #upload-info {
   overflow: hidden !important;
 }
 
-/* Aplicar truncamiento con puntos suspensivos (...) al nombre del canal cuando no hay espacio suficiente */
+/* Truncamiento con puntos suspensivos (...) al nombre del canal si el espacio horizontal es reducido */
 ytd-video-owner-renderer #upload-info #container {
   display: flex !important;
   align-items: center !important;

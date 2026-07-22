@@ -59,10 +59,10 @@ function injectWatchButtons() {
   if (existingMp3) existingMp3.remove();
   if (existingMp4) existingMp4.remove();
 
-  // Buscar el botón de suscribirse globalmente dentro de la sección de metadatos
-  const subscribeBtn = document.querySelector("ytd-watch-metadata ytd-subscribe-button-renderer") || 
-                       document.querySelector("ytd-watch-metadata #subscribe-button") ||
-                       document.querySelector("ytd-subscribe-button-renderer");
+  // Buscar el contenedor del botón de suscripción (#subscribe-button o el renderer)
+  const subscribeContainer = document.querySelector("ytd-watch-metadata #subscribe-button") || 
+                             document.querySelector("ytd-watch-metadata ytd-subscribe-button-renderer") ||
+                             document.querySelector("ytd-subscribe-button-renderer");
 
   // 1. Crear Botón MP3
   const btnMp3 = document.createElement("button");
@@ -80,11 +80,16 @@ function injectWatchButtons() {
     handleDownloadClick(btnMp4, window.location.href, "downloadMp4", false, TEXT_DOWNLOAD_MP4);
   });
 
-  // Si encontramos el botón de suscribirse en la página, insertamos inmediatamente después de él
-  if (subscribeBtn && subscribeBtn.parentNode) {
-    subscribeBtn.parentNode.insertBefore(btnMp4, subscribeBtn.nextSibling);
-    subscribeBtn.parentNode.insertBefore(btnMp3, subscribeBtn.nextSibling);
-    console.log("Botones MP3 y MP4 inyectados exitosamente a la derecha de suscribirse (global)");
+  // Si encontramos el botón de suscribirse en la página, insertamos inmediatamente a la derecha
+  if (subscribeContainer && subscribeContainer.parentNode) {
+    let targetElement = subscribeContainer;
+    // Si targetElement es ytd-subscribe-button-renderer dentro de #subscribe-button, usamos #subscribe-button para asegurar posición exterior en la fila
+    if (targetElement.id !== "subscribe-button" && targetElement.parentNode && targetElement.parentNode.id === "subscribe-button") {
+      targetElement = targetElement.parentNode;
+    }
+    targetElement.parentNode.insertBefore(btnMp4, targetElement.nextSibling);
+    targetElement.parentNode.insertBefore(btnMp3, targetElement.nextSibling);
+    console.log("Botones MP3 y MP4 inyectados exitosamente a la derecha de suscribirse");
   } else {
     // Fallback: agregamos al final del contenedor del canal (ej. videos propios del usuario)
     const buttonsContainer = ownerContainer.querySelector("#buttons") || ownerContainer;
