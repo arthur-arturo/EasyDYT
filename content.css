@@ -1,4 +1,4 @@
-/* Estilos de la Extensión YouTube MP3/MP4 Downloader (content.css) */
+/* Estilos de la Extensión EasyDYT (content.css) */
 
 /* --- BOTONES DE PÁGINA DE VIDEO ESTÁNDAR (ESTILO CÁPSULA YOUTUBE) --- */
 .yt-mp3-btn-watch,
@@ -9,17 +9,19 @@
   background-color: var(--yt-spec-badge-chip-background, rgba(255, 255, 255, 0.1)) !important;
   color: var(--yt-spec-text-primary, #fff) !important;
   border: none !important;
-  border-radius: 16px !important;
-  height: 32px !important;
-  padding: 0 12px !important;
-  margin-left: 6px !important;
-  font-size: 13px !important;
+  border-radius: 18px !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  margin-left: 8px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   font-family: "Roboto", "Arial", sans-serif !important;
   cursor: pointer !important;
   transition: background-color 0.2s, transform 0.1s, color 0.2s !important;
   vertical-align: middle !important;
   user-select: none !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
 }
 
 .yt-mp3-btn-watch {
@@ -76,6 +78,77 @@ html:not([dark]) .yt-mp4-btn-watch:hover {
   background-color: rgba(231, 76, 60, 0.2) !important;
   color: #e74c3c !important;
 }
+
+/* --- PROTECCIÓN ANTI-DESTRUCTIVA DE LAYOUT PARA NOMBRES LARGOS DE CANALES --- */
+
+/* Impedir que la fila principal de metadatos colapse o se rompa en varias lineas innecesarias */
+ytd-watch-metadata #top-row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+/* El área del propietario del video debe encogerse limpiamente si el nombre del canal es largo */
+ytd-watch-metadata #owner,
+ytd-video-owner-renderer {
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  overflow: hidden !important;
+}
+
+/* Contenedor con la información del canal (nombre y suscriptores) */
+ytd-video-owner-renderer #upload-info {
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
+  overflow: hidden !important;
+}
+
+/* Aplicar truncamiento con puntos suspensivos (...) al nombre del canal cuando no hay espacio suficiente */
+ytd-video-owner-renderer #upload-info #container {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+ytd-video-owner-renderer #upload-info #text-container {
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
+  overflow: hidden !important;
+}
+
+ytd-video-owner-renderer #upload-info #text-container #text,
+ytd-video-owner-renderer #upload-info ytd-channel-name #text {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+ytd-video-owner-renderer #upload-info #owner-sub-count {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+/* Garantizar que el avatar, la insignia de verificado, los botones de suscripción y descarga NUNCA se deformen */
+ytd-video-owner-renderer #avatar,
+ytd-video-owner-renderer #subscribe-button,
+ytd-video-owner-renderer ytd-subscribe-button-renderer,
+ytd-video-owner-renderer #sponsor-button,
+ytd-video-owner-renderer ytd-badge-supported-renderer,
+.yt-mp3-btn-watch,
+.yt-mp4-btn-watch,
+ytd-watch-metadata #actions {
+  flex-shrink: 0 !important;
+}
+
 
 /* --- BOTÓN DE SHORTS (ESTILO CÍRCULO LATERAL YOUTUBE) --- */
 .yt-mp3-btn-short-container,
@@ -149,4 +222,3 @@ html:not([dark]) .yt-mp4-btn-watch:hover {
   50% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }
-

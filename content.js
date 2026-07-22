@@ -47,11 +47,17 @@ observer.observe(document.body, {
 
 // Inyectar los dos botones (MP3 y MP4) en la página del video estándar
 function injectWatchButtons() {
-  // Evitamos inyecciones duplicadas
-  if (document.querySelector(".yt-mp3-btn-watch") || document.querySelector(".yt-mp4-btn-watch")) return;
+  const existingMp3 = document.querySelector(".yt-mp3-btn-watch");
+  const existingMp4 = document.querySelector(".yt-mp4-btn-watch");
+  if (existingMp3 && document.body.contains(existingMp3) && existingMp4 && document.body.contains(existingMp4)) {
+    return;
+  }
 
   const ownerContainer = document.querySelector("ytd-video-owner-renderer");
   if (!ownerContainer) return;
+
+  if (existingMp3) existingMp3.remove();
+  if (existingMp4) existingMp4.remove();
 
   // Buscar el botón de suscribirse globalmente dentro de la sección de metadatos
   const subscribeBtn = document.querySelector("ytd-watch-metadata ytd-subscribe-button-renderer") || 
