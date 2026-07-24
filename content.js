@@ -45,24 +45,26 @@ observer.observe(document.body, {
   subtree: true
 });
 
-// Inyectar los dos botones (MP3 y MP4) en la página del video estándar
+// Inyectar los dos botones (MP3 y MP4) en la página del video estándar dentro de un contenedor aislado
 function injectWatchButtons() {
-  const existingMp3 = document.querySelector(".yt-mp3-btn-watch");
-  const existingMp4 = document.querySelector(".yt-mp4-btn-watch");
-  if (existingMp3 && document.body.contains(existingMp3) && existingMp4 && document.body.contains(existingMp4)) {
+  const existingWrapper = document.querySelector(".easydyt-buttons-wrapper");
+  if (existingWrapper && document.body.contains(existingWrapper)) {
     return;
   }
 
   const ownerContainer = document.querySelector("ytd-video-owner-renderer");
   if (!ownerContainer) return;
 
-  if (existingMp3) existingMp3.remove();
-  if (existingMp4) existingMp4.remove();
+  if (existingWrapper) existingWrapper.remove();
 
   // Buscar el contenedor del botón de suscripción (#subscribe-button o el renderer)
   const subscribeContainer = document.querySelector("ytd-watch-metadata #subscribe-button") || 
                              document.querySelector("ytd-watch-metadata ytd-subscribe-button-renderer") ||
                              document.querySelector("ytd-subscribe-button-renderer");
+
+  // Crear contenedor wrapper aislado para nuestros botones
+  const wrapper = document.createElement("div");
+  wrapper.className = "easydyt-buttons-wrapper";
 
   // 1. Crear Botón MP3
   const btnMp3 = document.createElement("button");
@@ -80,22 +82,22 @@ function injectWatchButtons() {
     handleDownloadClick(btnMp4, window.location.href, "downloadMp4", false, TEXT_DOWNLOAD_MP4);
   });
 
+  wrapper.appendChild(btnMp3);
+  wrapper.appendChild(btnMp4);
+
   // Si encontramos el botón de suscribirse en la página, insertamos inmediatamente a la derecha
   if (subscribeContainer && subscribeContainer.parentNode) {
     let targetElement = subscribeContainer;
-    // Si targetElement es ytd-subscribe-button-renderer dentro de #subscribe-button, usamos #subscribe-button para asegurar posición exterior en la fila
     if (targetElement.id !== "subscribe-button" && targetElement.parentNode && targetElement.parentNode.id === "subscribe-button") {
       targetElement = targetElement.parentNode;
     }
-    targetElement.parentNode.insertBefore(btnMp4, targetElement.nextSibling);
-    targetElement.parentNode.insertBefore(btnMp3, targetElement.nextSibling);
-    console.log("Botones MP3 y MP4 inyectados exitosamente a la derecha de suscribirse");
+    targetElement.parentNode.insertBefore(wrapper, targetElement.nextSibling);
+    console.log("Wrapper de botones EasyDYT inyectado exitosamente a la derecha de suscribirse");
   } else {
     // Fallback: agregamos al final del contenedor del canal (ej. videos propios del usuario)
     const buttonsContainer = ownerContainer.querySelector("#buttons") || ownerContainer;
-    buttonsContainer.appendChild(btnMp3);
-    buttonsContainer.appendChild(btnMp4);
-    console.log("Botones MP3 y MP4 inyectados en el contenedor de fallback");
+    buttonsContainer.appendChild(wrapper);
+    console.log("Wrapper de botones EasyDYT inyectado en el contenedor de fallback");
   }
 }
 
