@@ -163,6 +163,28 @@ function injectShortsButtons() {
     console.log("Botones MP3 y MP4 inyectados en Short");
   });
 }
+// Escuchar eventos de progreso en tiempo real desde el Service Worker
+chrome.runtime.onMessage.addListener((request) => {
+  if (request.action === "downloadProgress") {
+    const activeBtn = document.querySelector(".easydyt-buttons-wrapper button.loading") || 
+                      document.querySelector(".yt-mp3-btn-short-container button.loading") ||
+                      document.querySelector(".yt-mp4-btn-short-container button.loading");
+    if (!activeBtn) return;
+
+    const isShort = activeBtn.classList.contains("yt-mp3-btn-short") || activeBtn.classList.contains("yt-mp4-btn-short");
+    const textSpan = activeBtn.querySelector(".yt-btn-text");
+    const labelSpan = isShort ? activeBtn.parentElement.querySelector(".yt-mp3-btn-short-label, .yt-mp4-btn-short-label") : null;
+
+    if (request.status) {
+      if (textSpan) textSpan.innerText = request.status;
+      if (labelSpan) labelSpan.innerText = request.status.slice(0, 5);
+    } else if (request.percent !== undefined) {
+      if (textSpan) textSpan.innerText = `${request.percent}%`;
+      if (labelSpan) labelSpan.innerText = `${request.percent}%`;
+    }
+  }
+});
+
 // Manejar la acción de descarga genérica con control de excepciones robusto
 function handleDownloadClick(btnElement, url, action, isShort, defaultText, labelElement = null) {
   if (btnElement.classList.contains("loading")) return;
@@ -170,7 +192,7 @@ function handleDownloadClick(btnElement, url, action, isShort, defaultText, labe
   // Cambiar estado a "Cargando"
   btnElement.classList.add("loading");
   if (!isShort) {
-    btnElement.querySelector(".yt-btn-text").innerText = TEXT_DOWNLOADING;
+    btnElement.querySelector(".yt-btn-text").innerText = isSpanish ? "Iniciando..." : "Starting...";
   } else if (labelElement) {
     labelElement.innerText = "...";
   }

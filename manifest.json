@@ -1,11 +1,13 @@
 {
   "manifest_version": 3,
   "name": "EasyDYT",
-  "version": "1.1",
-  "description": "Easy Download for YouTube. Descarga videos y Shorts de YouTube a MP3 (320kbps) y MP4 (Video Max Calidad) con un solo clic sin anuncios.",
+  "version": "2.0",
+  "description": "Easy Download for YouTube. Descarga videos y Shorts de YouTube a MP3 (320kbps) y MP4 (Video Max Calidad) con motor local de alta velocidad.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsj5yCMJVuHb5rC9nW70ZRSst9ciT3gJ8RsWbp7OyyaHui+mKVZcW0OCbVof9gyXY3uRW2sNdusX+kpCBZ+iW2vcKjpAOrXPSoGj1cX12yc1YwDTy0Hu3oTEZGoeCUJ3TdLEDKM/i81h360vRZgH7pNprR3Xa4kmEDqCuzFMgJHAxzJS+7e4/vXjc+A60Tj2IC53u5Gq0UOrqs3P4A9olvrXElg5xbkMkvtnwLWr1d9uYYb/R5Wb97akPuG1eGGDfEevD0Bb6IzhKf+bAvD4utWIHLqT61r+5n69nW/J/9Vqa+Z2R8xmukwknRM5U2WL+eLbUZvEtfx3ks47k+OIOUwIDAQAB",
   "permissions": [
     "downloads",
-    "storage"
+    "storage",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "*://*.youtube.com/*",

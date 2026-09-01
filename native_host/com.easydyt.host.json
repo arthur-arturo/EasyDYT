@@ -1,0 +1,9 @@
+{
+  "name": "com.easydyt.host",
+  "description": "EasyDYT Native Messaging Host for Local YouTube Downloads",
+  "path": "C:\\Users\\thisuser\\.gemini\\antigravity\\scratch\\yt-downloader-extension\\native_host\\host.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://acmlfhbjajkgkidgncfianjjghaghdop/"
+  ]
+}

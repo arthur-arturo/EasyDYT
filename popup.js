@@ -1,5 +1,6 @@
 // Lógica del Panel de Configuración (popup.js)
 
+const HOST_NAME = "com.easydyt.host";
 const DEFAULT_INSTANCE = "https://cobaltapi.kittycat.boo";
 const DEPRECATED_INSTANCES = [
   "dog.kittycat.boo",
@@ -13,8 +14,32 @@ document.addEventListener("DOMContentLoaded", async () => {
   const serverInput = document.getElementById("server-input");
   const saveBtn = document.getElementById("save-btn");
   const presetButtons = document.querySelectorAll(".preset-btn");
+  const statusText = document.getElementById("engine-status-text");
+  const localBadge = document.getElementById("local-badge");
 
-  // 1. Cargar configuración actual
+  // 1. Probar conexión con el Host Nativo Local (yt-dlp)
+  try {
+    chrome.runtime.sendNativeMessage(HOST_NAME, { action: "ping" }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        console.warn("Host Nativo no conectado:", chrome.runtime.lastError?.message);
+        if (statusText) statusText.innerText = "Nube (Cobalt)";
+        if (localBadge) {
+          localBadge.innerText = "☁️ Nube (Fallback)";
+          localBadge.style.color = "#f1c40f";
+        }
+      } else {
+        if (statusText) statusText.innerText = "Motor Local Activo";
+        if (localBadge) {
+          localBadge.innerText = "⚡ Local (yt-dlp)";
+          localBadge.style.color = "#2ecc71";
+        }
+      }
+    });
+  } catch (err) {
+    console.warn("Error enviando ping nativo:", err);
+  }
+
+  // 2. Cargar configuración de servidor en la nube actual
   const storage = await chrome.storage.local.get("cobaltInstance");
   let activeInstance = storage.cobaltInstance || DEFAULT_INSTANCE;
 
@@ -23,8 +48,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   serverInput.value = activeInstance;
-
-  // 2. Resaltar botón de preset activo al iniciar
   updateActivePresetHighlight(activeInstance);
 
   // 3. Lógica para guardar la configuración
@@ -36,20 +59,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       serverInput.value = DEFAULT_INSTANCE;
     }
 
-    // Guardar en chrome.storage
     await chrome.storage.local.set({ cobaltInstance: customUrl });
-    
-    // Actualizar resaltado
     updateActivePresetHighlight(customUrl);
 
-    // Feedback táctil premium de guardado exitoso
     const originalText = saveBtn.innerText;
     saveBtn.innerText = "✓";
     saveBtn.style.backgroundColor = "#2ecc71";
     
     setTimeout(() => {
       saveBtn.innerText = originalText;
-      saveBtn.style.backgroundColor = ""; // Regresa al CSS original
+      saveBtn.style.backgroundColor = "";
     }, 1500);
   });
 
@@ -59,13 +78,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       const targetUrl = btn.getAttribute("data-url");
       serverInput.value = targetUrl;
       
-      // Guardar inmediatamente al hacer clic
       await chrome.storage.local.set({ cobaltInstance: targetUrl });
-      
-      // Actualizar resaltado
       updateActivePresetHighlight(targetUrl);
 
-      // Feedback en el botón de preset para mayor interactividad
       btn.style.borderColor = "#2ecc71";
       setTimeout(() => {
         btn.style.borderColor = "";
@@ -73,7 +88,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // Función para resaltar el preset activo correspondiente a la URL configurada
   function updateActivePresetHighlight(currentUrl) {
     presetButtons.forEach(btn => {
       const url = btn.getAttribute("data-url");

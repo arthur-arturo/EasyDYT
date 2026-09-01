@@ -1,4 +1,6 @@
-// Instancia comunitaria predeterminada con 100% de éxito verificada
+// Background Service Worker for EasyDYT v2.0 (Motor 100% Local yt-dlp con Fallback)
+
+const HOST_NAME = "com.easydyt.host";
 const DEFAULT_INSTANCE = "https://cobaltapi.kittycat.boo";
 const DEPRECATED_INSTANCES = [
   "dog.kittycat.boo",
@@ -9,10 +11,16 @@ const DEPRECATED_INSTANCES = [
 ];
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  const tabId = sender.tab ? sender.tab.id : null;
+
   if (request.action === "downloadMp3") {
-    handleDownload(request.url, "audio")
-      .then(() => {
-        sendResponse({ success: true, message: "Descarga de MP3 iniciada" });
+    handleDownload(request.url, "audio", tabId)
+      .then((res) => {
+        if (res.success) {
+          sendResponse({ success: true, message: res.message || "Descarga de MP3 completada" });
+        } else {
+          sendResponse({ success: false, error: res.error || "Error en la descarga" });
+        }
       })
       .catch((error) => {
         console.error("Error en background (MP3):", error);
@@ -22,9 +30,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.action === "downloadMp4") {
-    handleDownload(request.url, "video")
-      .then(() => {
-        sendResponse({ success: true, message: "Descarga de MP4 iniciada" });
+    handleDownload(request.url, "video", tabId)
+      .then((res) => {
+        if (res.success) {
+          sendResponse({ success: true, message: res.message || "Descarga de MP4 completada" });
+        } else {
+          sendResponse({ success: false, error: res.error || "Error en la descarga" });
+        }
       })
       .catch((error) => {
         console.error("Error en background (MP4):", error);
@@ -34,12 +46,72 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-async function handleDownload(videoUrl, mode) {
-  // 1. Obtener la instancia de Cobalt configurada
+// Función orquestadora
+async function handleDownload(videoUrl, mode, tabId) {
+  // 1. Intentar descargar mediante el motor local (yt-dlp + ffmpeg)
+  try {
+    console.log("[EasyDYT] Ejecutando descarga en Motor Local...");
+    const localResult = await tryNativeDownload(videoUrl, mode, tabId);
+    return localResult;
+  } catch (nativeErr) {
+    console.warn("[EasyDYT] Host nativo no disponible o no instalado:", nativeErr.message);
+    
+    // Solo si el host nativo no existe en el sistema, recurrir a Cobalt
+    if (nativeErr.message.includes("HOST_NOT_INSTALLED") || nativeErr.message.includes("not found") || nativeErr.message.includes("Specified native messaging host not found")) {
+      console.log("[EasyDYT] Recurriendo a servidores Cobalt...");
+      return await handleCobaltDownload(videoUrl, mode);
+    }
+
+    return { success: false, error: nativeErr.message };
+  }
+}
+
+// Descarga mediante Native Messaging con streaming de progreso (100% local en tu PC)
+function tryNativeDownload(videoUrl, mode, tabId) {
+  return new Promise((resolve, reject) => {
+    let port;
+    try {
+      port = chrome.runtime.connectNative(HOST_NAME);
+    } catch (e) {
+      return reject(new Error("HOST_NOT_INSTALLED: " + e.message));
+    }
+
+    let isResolved = false;
+
+    port.onMessage.addListener((msg) => {
+      console.log("[EasyDYT Background] Recibido del host:", msg);
+      if (msg.type === "progress" || msg.type === "status") {
+        if (tabId) {
+          chrome.tabs.sendMessage(tabId, {
+            action: "downloadProgress",
+            mode: mode,
+            percent: msg.percent,
+            status: msg.status || msg.text
+          }).catch(() => {});
+        }
+      } else if (msg.type === "complete" || msg.success !== undefined) {
+        isResolved = true;
+        port.disconnect();
+        resolve(msg);
+      }
+    });
+
+    port.onDisconnect.addListener(() => {
+      if (!isResolved) {
+        const err = chrome.runtime.lastError ? chrome.runtime.lastError.message : "Conexión con el host cerrada inesperadamente";
+        reject(new Error(err));
+      }
+    });
+
+    port.postMessage({ action: "download", url: videoUrl, mode: mode });
+  });
+}
+
+// Descarga mediante servidores Cobalt (Solo en caso de no tener el host local)
+async function handleCobaltDownload(videoUrl, mode) {
   const storage = await chrome.storage.local.get("cobaltInstance");
   let userInstance = storage.cobaltInstance || DEFAULT_INSTANCE;
 
-  // 2. Construir la lista de servidores a intentar (evitando los obsoletos/rotos)
   const FALLBACK_POOL = [
     "https://cobaltapi.kittycat.boo",
     "https://fox.kittycat.boo",
@@ -49,34 +121,26 @@ async function handleDownload(videoUrl, mode) {
   ];
 
   let instancesToTry = [];
-  
-  // Añadir la del usuario primero si es válida y no es obsoleta
   if (userInstance && !DEPRECATED_INSTANCES.some(dep => userInstance.includes(dep))) {
-    // Asegurar formato limpio (sin barra final)
     if (userInstance.endsWith("/")) {
       userInstance = userInstance.slice(0, -1);
     }
     instancesToTry.push(userInstance);
   }
 
-  // Añadir las del pool de fallback sin duplicados
   for (const fallback of FALLBACK_POOL) {
     if (!instancesToTry.includes(fallback)) {
       instancesToTry.push(fallback);
     }
   }
 
-  console.log("Cola de servidores a intentar:", instancesToTry);
-
   let lastError = null;
 
-  // 3. Iterar por cada servidor en la cadena de fallback
   for (let i = 0; i < instancesToTry.length; i++) {
     const currentInstance = instancesToTry[i];
-    console.log(`[Intento ${i + 1}/${instancesToTry.length}] Probando servidor: ${currentInstance}`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout por servidor
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     try {
       const requestBody = {
         url: videoUrl,
@@ -110,12 +174,9 @@ async function handleDownload(videoUrl, mode) {
       }
 
       const data = await response.json();
-      console.log("Respuesta del servidor Cobalt:", data);
 
       if (data.status === "error") {
         const errCode = data.error?.code || data.text || "error_desconocido";
-        
-        // Si el video requiere login en YouTube (edad, etc.), arrojamos el código exacto
         if (errCode.includes("youtube.login")) {
           throw new Error("error.api.youtube.login");
         }
@@ -126,39 +187,6 @@ async function handleDownload(videoUrl, mode) {
         throw new Error("no_download_url");
       }
 
-      // 4. Validar que la descarga no devuelva un flujo de 0 bytes
-      console.log("Validando tamaño de archivo en el túnel...");
-      const verifyController = new AbortController();
-      const verifyTimeout = setTimeout(() => verifyController.abort(), 6000);
-
-      try {
-        const verifyRes = await fetch(data.url, { 
-          signal: verifyController.signal 
-        });
-        
-        clearTimeout(verifyTimeout);
-        
-        const contentLength = verifyRes.headers.get("content-length");
-        const estLength = verifyRes.headers.get("estimated-content-length");
-        
-        verifyController.abort(); // Cancelar flujo de red inmediatamente
-        
-        console.log(`Headers de validación - Content-Length: ${contentLength}, Estimated-Length: ${estLength}`);
-
-        if (contentLength === "0" || estLength === "-1" || estLength === "0") {
-          throw new Error("empty_stream");
-        }
-      } catch (verifyErr) {
-        clearTimeout(verifyTimeout);
-        if (verifyErr.message === "empty_stream") {
-          throw verifyErr;
-        }
-        // Errores de red o de timeout en la verificación no deben necesariamente bloquear
-        console.warn("Verificación de tamaño ignorada por error de conexión o CORS:", verifyErr.message);
-      }
-
-      // 5. Descargar el archivo con éxito
-      console.log(`¡Servidor exitoso! Iniciando descarga en Chrome: ${data.url}`);
       return new Promise((resolve, reject) => {
         chrome.downloads.download({
           url: data.url,
@@ -168,27 +196,19 @@ async function handleDownload(videoUrl, mode) {
           if (chrome.runtime.lastError) {
             reject(new Error(chrome.runtime.lastError.message));
           } else {
-            resolve(downloadId);
+            resolve({ success: true, downloadId });
           }
         });
       });
 
     } catch (error) {
       clearTimeout(timeoutId);
-      console.warn(`Error con el servidor ${currentInstance}:`, error.message);
       lastError = error;
-
-      // Si es un error del tipo restricción de edad (login), y es el último intento
-      // o queremos propagarlo, lo guardamos para el reporte final.
       if (error.message === "error.api.youtube.login") {
-        // Seguimos intentando con otros servidores por si alguno tiene cookies configuradas,
-        // pero registramos el error específico.
         lastError = new Error("error.api.youtube.login");
       }
     }
   }
 
-  // Si llegamos aquí, todos los servidores fallaron
-  console.error("Todos los servidores de descarga fallaron.");
   throw lastError || new Error("Todos los servidores de descarga fallaron.");
 }
